@@ -108,19 +108,25 @@ void updateSpeed() {
 void broadcastTransform() {
   static tf::TransformBroadcaster br;
   tf::Transform transform;
-  transform.setOrigin(tf::Vector3(-GPSValues[2], GPSValues[0], GPSValues[1]));
+  transform.setOrigin(tf::Vector3(GPSValues[0], GPSValues[2], 0));
   tf::Quaternion q(inertialUnitValues[0], inertialUnitValues[1], inertialUnitValues[2], inertialUnitValues[3]);
-  q = q.inverse();
+  tf::Quaternion qFix;
+  qFix.setEuler(0, 0, 0);
+  // q = q * qFix;
   transform.setRotation(q);
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", "base_link"));
-  transform.setIdentity();
+
+  // Robot
+  q.setEuler(M_PI, 0, 0);
+  transform.setRotation(q);
+  transform.setOrigin(tf::Vector3(0, 0, 0));
   br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "base_link", "pioneer3at/Sick_LMS_291"));
 }
 
 void GPSCallback(const sensor_msgs::NavSatFix::ConstPtr &values) {
   GPSValues[0] = values->latitude;
-  GPSValues[1] = values->altitude;
-  GPSValues[2] = values->longitude;
+  GPSValues[1] = values->longitude;
+  GPSValues[2] = values->altitude;
   broadcastTransform();
 }
 
